@@ -36,8 +36,8 @@ const char* ssid     = "HOTSPOT_HP_ANDA";
 const char* password = "PASSWORD_HOTSPOT";
 
 // Ganti dengan Alamat IP Publik atau Domain VPS Anda
-const char* vps_host = "IP_VPS_ANDA"; // Contoh: "103.xxx.xxx.xxx" atau "iot.domainanda.com"
-const int   vps_port = 8080;          // Port server.js di VPS
+const char* vps_host = "103.247.9.206"; // IP VPS Anda
+const int   vps_port = 8005;            // Port Nginx/Relay di VPS (8005 atau 8080)
 
 // =========================================================================
 // 2. DEFINISI PIN & RELAY

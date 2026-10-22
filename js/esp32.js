@@ -1,10 +1,10 @@
 // ESP32 Connectivity, Protocol Handler, and Code Generator
 class ESP32Bridge {
   constructor() {
-    this.mode = localStorage.getItem('smarthome_esp32_mode') || 'simulated'; // 'simulated' | 'websocket' | 'http_rest'
-    this.ip = localStorage.getItem('smarthome_esp32_ip') || '192.168.1.150';
-    this.wsPort = localStorage.getItem('smarthome_esp32_ws_port') || '81';
-    this.httpPort = localStorage.getItem('smarthome_esp32_http_port') || '80';
+    this.mode = localStorage.getItem('smarthome_esp32_mode') || 'websocket'; // 'simulated' | 'websocket' | 'http_rest'
+    this.ip = localStorage.getItem('smarthome_esp32_ip') || (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.hostname : '103.247.9.206');
+    this.wsPort = localStorage.getItem('smarthome_esp32_ws_port') || (window.location.port || '8005');
+    this.httpPort = localStorage.getItem('smarthome_esp32_http_port') || (window.location.port || '8005');
     this.connected = false;
     this.ws = null;
     this.logs = [];
@@ -254,45 +254,46 @@ class ESP32Bridge {
   }
 
   // Generates complete Arduino IDE / PlatformIO C++ firmware code
-  generateFirmwareCode(ssid = 'WIFI_RUMAH_ANDA', pass = 'PASSWORD_WIFI') {
+  generateFirmwareCode(ssid = 'WIFI_HOTSPOT_HP', pass = 'PASSWORD_HOTSPOT') {
+    const vpsHost = (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.hostname : '103.247.9.206';
+    const vpsPort = window.location.port || '8005';
     return `/*
  * =========================================================================
- * SMART HOME ESP32 - CONTROLLER FIRMWARE
- * Dibuat khusus untuk Denah Rumah Pintar (Antigravity)
+ * SMART HOME ESP32 - CONTROLLER FIRMWARE (CLOUD VPS & HOTSPOT HP)
+ * Author: Fizt001
+ * Repo  : https://github.com/Fizt001/iot.git
  * =========================================================================
- * Perangkat Terkontrol:
- * 1.  GPIO 16 -> Lampu Teras / Lobby Depan (Relay)
- * 2.  GPIO 17 -> Lampu Ruang Tamu (Relay)
- * 3.  GPIO 27 -> Kipas Ruang Tamu (PWM / Transistor Driver / Triac)
- * 4.  GPIO 18 -> Lampu Ruang Keluarga (Relay)
- * 5.  GPIO 32 -> Kipas Ruang Keluarga (PWM)
- * 6.  GPIO 19 -> Lampu Kamar Tidur 1 (Utama) (Relay)
- * 7.  GPIO 21 -> Lampu WC 1 (Dalam Kamar 1) (Relay)
- * 8.  GPIO 22 -> Lampu Kamar Tidur 2 (Relay)
- * 9.  GPIO 23 -> Lampu Kamar Tidur 3 (Relay)
- * 10. GPIO 25 -> Lampu Dapur (Relay)
- * 11. GPIO 33 -> Kipas Dapur (PWM)
- * 12. GPIO 26 -> Lampu WC 2 (Luar / Umum) (Relay)
+ * Perangkat Terkontrol (12 Pin):
+ * 1.  GPIO 16 -> Lampu Teras / Lobby Depan (Relay 1)
+ * 2.  GPIO 17 -> Lampu Ruang Tamu (Relay 2)
+ * 3.  GPIO 27 -> Kipas Ruang Tamu (PWM Ch 0)
+ * 4.  GPIO 18 -> Lampu Ruang Keluarga (Relay 3)
+ * 5.  GPIO 32 -> Kipas Ruang Keluarga (PWM Ch 1)
+ * 6.  GPIO 19 -> Lampu Kamar Tidur 1 (Utama) (Relay 4)
+ * 7.  GPIO 21 -> Lampu WC 1 (Kamar 1) (Relay 5)
+ * 8.  GPIO 22 -> Lampu Kamar Tidur 2 (Relay 6)
+ * 9.  GPIO 23 -> Lampu Kamar Tidur 3 (Relay 7)
+ * 10. GPIO 25 -> Lampu Dapur (Relay 8)
+ * 11. GPIO 33 -> Kipas Dapur (PWM Ch 2)
+ * 12. GPIO 26 -> Lampu WC 2 (Luar / Umum) (Relay 9)
  * =========================================================================
  * Library yang dibutuhkan (Install via Arduino Library Manager):
- * - WebSockets by Markus Sattler
- * - ArduinoJson by Benoit Blanchon (v6+)
- * - ESPAsyncWebServer (atau WebServer built-in ESP32)
+ * 1. "WebSockets" by Markus Sattler
+ * 2. "ArduinoJson" by Benoit Blanchon (v6 atau v7)
  * =========================================================================
  */
 
 #include <WiFi.h>
-#include <WebServer.h>
-#include <WebSocketsServer.h>
+#include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 
-// Konfigurasi Jaringan WiFi
-const char* ssid = "${ssid}";
+// Konfigurasi WiFi / Hotspot HP
+const char* ssid     = "${ssid}";
 const char* password = "${pass}";
 
-// Web Server & WebSocket Server
-WebServer server(80);
-WebSocketsServer webSocket = WebSocketsServer(81);
+// Alamat IP VPS Anda
+const char* vps_host = "${vpsHost}";
+const int   vps_port = ${vpsPort};
 
 // Definisi Pin Lampu (Relay Active LOW umumnya)
 #define RELAY_ON  LOW
@@ -308,25 +309,24 @@ WebSocketsServer webSocket = WebSocketsServer(81);
 #define PIN_KITCHEN_LIGHT    25
 #define PIN_WC2_LIGHT        26
 
-// Definisi Pin Kipas (PWM Channel)
+// Definisi Pin Kipas Angin (PWM)
 #define PIN_LIVING_FAN       27
 #define PIN_FAMILY_FAN       32
 #define PIN_KITCHEN_FAN      33
 
-// PWM Channels ESP32
 #define PWM_CH_LIVING        0
 #define PWM_CH_FAMILY        1
 #define PWM_CH_KITCHEN       2
 #define PWM_FREQ             5000
-#define PWM_RES              8 // 0-255 (8-bit resolution)
+#define PWM_RES              8 // 0-255
 
-// Global state tracker
 int livingFanSpeed = 0;
 int familyFanSpeed = 0;
 int kitchenFanSpeed = 0;
 
+WebSocketsClient webSocket;
+
 void setupPins() {
-  // Setup Relays
   int relayPins[] = {
     PIN_LOBBY_LIGHT, PIN_LIVING_LIGHT, PIN_FAMILY_LIGHT,
     PIN_BEDROOM1_LIGHT, PIN_WC1_LIGHT, PIN_BEDROOM2_LIGHT,
@@ -338,7 +338,6 @@ void setupPins() {
     digitalWrite(pin, RELAY_OFF);
   }
 
-  // Setup Fans PWM (Kompatibel dengan ESP32 Core v2.x & v3.x)
 #if defined(ESP_ARDUINO_VERSION_MAJOR) && (ESP_ARDUINO_VERSION_MAJOR >= 3)
   ledcAttach(PIN_LIVING_FAN, PWM_FREQ, PWM_RES);
   ledcAttach(PIN_FAMILY_FAN, PWM_FREQ, PWM_RES);
@@ -362,7 +361,6 @@ void setupPins() {
 }
 
 void setFanSpeed(int pin, int channel, int speedLevel) {
-  // speedLevel: 0=Off, 1=Low (85), 2=Medium (170), 3=High (255)
   int duty = 0;
   if (speedLevel == 1) duty = 85;
   else if (speedLevel == 2) duty = 170;
@@ -380,10 +378,8 @@ void processDeviceCommand(JsonObject doc) {
   int state = doc["state"];
   int speed = doc["speed"] | 0;
 
-  Serial.printf("[KONTROL] Perangkat: %s | Status: %s | Kecepatan: %d\\n", 
-                dev, state ? "NYALA" : "MATI", speed);
+  Serial.printf("[PERINTAH] %s -> %s (Kecepatan: %d)\\n", dev, state ? "NYALA" : "MATI", speed);
 
-  // Lampu (Relay)
   if (strcmp(dev, "lobby_light") == 0) digitalWrite(PIN_LOBBY_LIGHT, state ? RELAY_ON : RELAY_OFF);
   else if (strcmp(dev, "living_light") == 0) digitalWrite(PIN_LIVING_LIGHT, state ? RELAY_ON : RELAY_OFF);
   else if (strcmp(dev, "family_light") == 0) digitalWrite(PIN_FAMILY_LIGHT, state ? RELAY_ON : RELAY_OFF);
@@ -394,7 +390,6 @@ void processDeviceCommand(JsonObject doc) {
   else if (strcmp(dev, "kitchen_light") == 0) digitalWrite(PIN_KITCHEN_LIGHT, state ? RELAY_ON : RELAY_OFF);
   else if (strcmp(dev, "wc2_light") == 0) digitalWrite(PIN_WC2_LIGHT, state ? RELAY_ON : RELAY_OFF);
 
-  // Kipas Angin (PWM)
   else if (strcmp(dev, "living_fan") == 0) {
     livingFanSpeed = state ? (speed > 0 ? speed : 1) : 0;
     setFanSpeed(PIN_LIVING_FAN, PWM_CH_LIVING, livingFanSpeed);
@@ -409,13 +404,13 @@ void processDeviceCommand(JsonObject doc) {
   }
 }
 
-// Mengirimkan status lengkap seluruh 12 pin ke Web App untuk sinkronisasi instan
-void sendAllStates(uint8_t clientNum) {
+void sendAllStates() {
 #if ARDUINOJSON_VERSION_MAJOR >= 7
   JsonDocument doc;
 #else
   StaticJsonDocument<1024> doc;
 #endif
+  doc["from"] = "esp32";
   JsonArray arr = doc.createNestedArray("devices");
 
   auto addLight = [&](const char* id, int pin) {
@@ -446,24 +441,19 @@ void sendAllStates(uint8_t clientNum) {
 
   String output;
   serializeJson(doc, output);
-
-  if (clientNum == 255) {
-    webSocket.broadcastTXT(output);
-  } else {
-    webSocket.sendTXT(clientNum, output);
-  }
+  webSocket.sendTXT(output);
 }
 
-void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length) {
+void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch (type) {
     case WStype_CONNECTED:
-      Serial.printf("[WS] Client #%u Terhubung! Sinkronisasi status awal...\\n", num);
-      // Kirim status awal seluruh perangkat ke client web yang baru terhubung
-      sendAllStates(num);
+      Serial.println("\\n>>> [WS] TERHUBUNG KE VPS CLOUD! <<<");
+      webSocket.sendTXT("{\\"from\\":\\"esp32\\",\\"msg\\":\\"ESP32 Online Siap Kontrol\\"}");
+      sendAllStates();
       break;
 
     case WStype_DISCONNECTED:
-      Serial.printf("[WS] Client #%u Terputus\\n", num);
+      Serial.println("[WS] Terputus dari VPS. Reconnecting...");
       break;
 
     case WStype_TEXT: {
@@ -475,51 +465,16 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t length
       DeserializationError err = deserializeJson(doc, payload);
       if (!err) {
         if (doc.containsKey("action") && strcmp(doc["action"], "getState") == 0) {
-          sendAllStates(num);
-        } else {
+          sendAllStates();
+        } else if (doc.containsKey("device")) {
           processDeviceCommand(doc.as<JsonObject>());
-          // Broadcast perubahan status ke seluruh browser client lainnya
-          webSocket.broadcastTXT(payload, length);
         }
       }
       break;
     }
+    default:
+      break;
   }
-}
-
-void handleRestApi() {
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  if (server.hasArg("dev") && server.hasArg("state")) {
-#if ARDUINOJSON_VERSION_MAJOR >= 7
-    JsonDocument doc;
-#else
-    StaticJsonDocument<256> doc;
-#endif
-    doc["device"] = server.arg("dev");
-    doc["state"] = server.arg("state").toInt();
-    if (server.hasArg("speed")) doc["speed"] = server.arg("speed").toInt();
-    processDeviceCommand(doc.as<JsonObject>());
-    server.send(200, "application/json", "{\\"status\\":\\"ok\\"}");
-    // Broadcast via WS juga agar web sync
-    sendAllStates(255);
-  } else {
-    server.send(400, "application/json", "{\\"error\\":\\"Invalid parameters\\"}");
-  }
-}
-
-void handleStatus() {
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-#if ARDUINOJSON_VERSION_MAJOR >= 7
-  JsonDocument doc;
-#else
-  StaticJsonDocument<256> doc;
-#endif
-  doc["status"] = "online";
-  doc["uptime"] = millis() / 1000;
-  doc["rssi"] = WiFi.RSSI();
-  String out;
-  serializeJson(doc, out);
-  server.send(200, "application/json", out);
 }
 
 void setup() {
@@ -527,9 +482,9 @@ void setup() {
   setupPins();
 
   Serial.println("\\n==========================================");
-  Serial.println("  ESP32 SMART HOME CONTROLLER - ANTIGRAVITY");
+  Serial.println("  ESP32 SMART HOME - IOT CLOUD CONTROLLER");
   Serial.println("==========================================");
-  Serial.print("Menghubungkan ke WiFi: ");
+  Serial.print("Menghubungkan ke WiFi / Hotspot: ");
   Serial.println(ssid);
 
   WiFi.mode(WIFI_STA);
@@ -539,44 +494,39 @@ void setup() {
     Serial.print(".");
   }
 
-  Serial.println("\\n>>> WiFi Terhubung!");
-  Serial.print(">>> ALAMAT IP ESP32: ");
+  Serial.println("\\n>>> WiFi / Hotspot Terhubung!");
+  Serial.print(">>> IP Lokal ESP32: ");
   Serial.println(WiFi.localIP());
-  Serial.println(">>> Gunakan Alamat IP di atas pada Web App Anda.");
-  Serial.println(">>> Port WebSocket : 81");
-  Serial.println(">>> Port HTTP Web  : 80");
-  Serial.println("==========================================\\n");
+  Serial.print(">>> Menghubungkan ke VPS: ");
+  Serial.print(vps_host);
+  Serial.print(":");
+  Serial.println(vps_port);
 
-  // Setup WebSocket Server
-  webSocket.begin();
+  webSocket.begin(vps_host, vps_port, "/?role=device");
   webSocket.onEvent(webSocketEvent);
-
-  // Setup HTTP REST Routes
-  server.on("/api/set", handleRestApi);
-  server.on("/api/status", handleStatus);
-  server.begin();
-  Serial.println("Server Siap Menerima Perintah!");
+  webSocket.setReconnectInterval(5000);
 }
 
 void loop() {
   webSocket.loop();
-  server.handleClient();
 
-  // Periodic Telemetry Broadcast (tiap 5 detik)
-  static unsigned long lastBroadcast = 0;
-  if (millis() - lastBroadcast > 5000) {
-    lastBroadcast = millis();
+  static unsigned long lastTelemetry = 0;
+  if (millis() - lastTelemetry > 5000) {
+    lastTelemetry = millis();
+    if (webSocket.isConnected()) {
 #if ARDUINOJSON_VERSION_MAJOR >= 7
-    JsonDocument doc;
+      JsonDocument doc;
 #else
-    StaticJsonDocument<256> doc;
+      StaticJsonDocument<256> doc;
 #endif
-    doc["telemetry"]["uptimeSec"] = millis() / 1000;
-    doc["telemetry"]["rssi"] = WiFi.RSSI();
-    doc["telemetry"]["freeHeap"] = ESP.getFreeHeap();
-    String output;
-    serializeJson(doc, output);
-    webSocket.broadcastTXT(output);
+      doc["from"] = "esp32";
+      doc["telemetry"]["uptimeSec"] = millis() / 1000;
+      doc["telemetry"]["rssi"] = WiFi.RSSI();
+      doc["telemetry"]["freeHeap"] = ESP.getFreeHeap();
+      String out;
+      serializeJson(doc, out);
+      webSocket.sendTXT(out);
+    }
   }
 }
 `;
