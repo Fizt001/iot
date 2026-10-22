@@ -149,8 +149,10 @@ wss.on('connection', (ws, req) => {
     // Send initial snapshot to newly connected web client
     ws.send(JSON.stringify({
       status: 'connected',
-      espConnected: telemetryState.espConnected,
-      telemetry: telemetryState,
+      type: 'esp_status',
+      espConnected: espDevices.size > 0,
+      connected: espDevices.size > 0,
+      telemetry: { ...telemetryState, espConnected: espDevices.size > 0 },
       devices: Object.values(devicesState)
     }));
   }
@@ -162,6 +164,17 @@ wss.on('connection', (ws, req) => {
 
       // If message is from ESP32
       if (espDevices.has(ws) || data.from === 'esp32' || data.telemetry) {
+        if (!espDevices.has(ws)) {
+          espDevices.add(ws);
+          webClients.delete(ws);
+          telemetryState.espConnected = true;
+          broadcastToWeb({
+            type: 'esp_status',
+            connected: true,
+            espConnected: true,
+            msg: 'ESP32 Hardware Terhubung ke VPS!'
+          });
+        }
         telemetryState.lastSeen = new Date().toISOString();
 
         if (data.telemetry) {

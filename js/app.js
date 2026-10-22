@@ -503,24 +503,25 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
   // ESP32 BRIDGE SUBSCRIPTIONS & TERMINAL LOGS
   // --------------------------------------------------------------------------
+  // ESP32 BRIDGE SUBSCRIPTIONS & TERMINAL LOGS
+  // --------------------------------------------------------------------------
   esp.subscribe({
-    onStatus: (connected, mode) => {
+    onStatus: (hwConnected, mode, serverConnected) => {
       if (espStatusPill) {
-        espStatusPill.className = `esp-status-pill ${mode === 'simulated' ? 'is-simulated' : (connected ? 'is-connected' : '')}`;
+        // Hijau jika hardware ESP32 fisik tersambung, Merah jika offline/belum connect
+        espStatusPill.className = `esp-status-pill ${hwConnected ? 'is-online' : 'is-offline'}`;
       }
       if (espStatusText) {
-        if (mode === 'simulated') {
-          espStatusText.textContent = 'Simulasi ESP32';
-        } else if (connected) {
-          espStatusText.textContent = `ESP32 (${esp.pingLatency}ms)`;
+        if (hwConnected) {
+          espStatusText.textContent = 'ESP32: Online';
         } else {
-          espStatusText.textContent = 'ESP32 Offline';
+          espStatusText.textContent = 'ESP32: Offline';
         }
       }
     },
     onTelemetry: (telemetry, latency) => {
-      if (esp.connected && espStatusText && esp.mode !== 'simulated') {
-        espStatusText.textContent = `ESP32 (${latency}ms)`;
+      if (esp.hwConnected && espStatusText) {
+        espStatusText.textContent = 'ESP32: Online';
       }
     },
     onLogs: (logs) => {
@@ -536,14 +537,43 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // PWA INSTALLATION INTERCEPTOR
+  // PWA INSTALLATION INTERCEPTOR & STANDALONE DETECTION
   // --------------------------------------------------------------------------
+  function isPWAStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches 
+        || window.matchMedia('(display-mode: fullscreen)').matches
+        || window.navigator.standalone === true 
+        || document.referrer.includes('android-app://')
+        || localStorage.getItem('smarthome_pwa_installed') === 'true';
+  }
+
+  // Jika aplikasi dibuka dari aplikasi PWA di HP (sudah diinstall), sembunyikan tombol install
+  if (btnInstall) {
+    if (isPWAStandalone()) {
+      btnInstall.style.display = 'none';
+    }
+  }
+
   window.addEventListener('beforeinstallprompt', (e) => {
+    // Jika sudah diinstal / mode standalone, jangan pernah tampilkan tombol install
+    if (isPWAStandalone()) {
+      e.preventDefault();
+      if (btnInstall) btnInstall.style.display = 'none';
+      return;
+    }
     e.preventDefault();
     deferredInstallPrompt = e;
     if (btnInstall) {
       btnInstall.style.display = 'inline-flex';
     }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    localStorage.setItem('smarthome_pwa_installed', 'true');
+    if (btnInstall) {
+      btnInstall.style.display = 'none';
+    }
+    window.showToast('Aplikasi berhasil dipasang di HP!');
   });
 
   if (btnInstall) {
@@ -552,6 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deferredInstallPrompt.prompt();
         const choice = await deferredInstallPrompt.userChoice;
         if (choice.outcome === 'accepted') {
+          localStorage.setItem('smarthome_pwa_installed', 'true');
           window.showToast('Aplikasi berhasil dipasang di HP!');
           btnInstall.style.display = 'none';
         }

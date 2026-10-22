@@ -1,5 +1,5 @@
 // Smart Home ESP32 Service Worker
-const CACHE_NAME = 'smarthome-esp32-v8';
+const CACHE_NAME = 'smarthome-esp32-v9';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

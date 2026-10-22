@@ -65,7 +65,7 @@ const INITIAL_DEVICES = [
     room: 'lobby',
     roomName: 'Teras / Lobby Depan',
     type: 'light',
-    state: true,
+    state: false,
     brightness: 100,
     gpio: 16,
     wattage: 15,
@@ -78,7 +78,7 @@ const INITIAL_DEVICES = [
     room: 'living_room',
     roomName: 'Ruang Tamu',
     type: 'light',
-    state: true,
+    state: false,
     brightness: 100,
     gpio: 17,
     wattage: 18,
@@ -90,8 +90,8 @@ const INITIAL_DEVICES = [
     room: 'living_room',
     roomName: 'Ruang Tamu',
     type: 'fan',
-    state: true,
-    speed: 2, // 1=Low, 2=Med, 3=High
+    state: false,
+    speed: 0,
     gpio: 27,
     wattage: 45,
     planCoord: { x: 42, y: 64 }
@@ -103,8 +103,8 @@ const INITIAL_DEVICES = [
     room: 'family_room',
     roomName: 'Ruang Keluarga',
     type: 'light',
-    state: true,
-    brightness: 80,
+    state: false,
+    brightness: 100,
     gpio: 18,
     wattage: 24,
     planCoord: { x: 50, y: 44 }
@@ -116,7 +116,7 @@ const INITIAL_DEVICES = [
     roomName: 'Ruang Keluarga',
     type: 'fan',
     state: false,
-    speed: 1,
+    speed: 0,
     gpio: 32,
     wattage: 50,
     planCoord: { x: 58, y: 40 }
@@ -129,7 +129,7 @@ const INITIAL_DEVICES = [
     roomName: 'Kamar Tidur 1 (Utama)',
     type: 'light',
     state: false,
-    brightness: 70,
+    brightness: 100,
     gpio: 19,
     wattage: 15,
     planCoord: { x: 18, y: 62 }
@@ -180,7 +180,7 @@ const INITIAL_DEVICES = [
     room: 'kitchen',
     roomName: 'Dapur',
     type: 'light',
-    state: true,
+    state: false,
     brightness: 100,
     gpio: 25,
     wattage: 20,
@@ -192,8 +192,8 @@ const INITIAL_DEVICES = [
     room: 'kitchen',
     roomName: 'Dapur',
     type: 'fan',
-    state: true,
-    speed: 3,
+    state: false,
+    speed: 0,
     gpio: 33,
     wattage: 40,
     planCoord: { x: 28, y: 15 }
@@ -221,7 +221,7 @@ class DeviceStore {
 
   loadDevices() {
     try {
-      const saved = localStorage.getItem('smarthome_devices_v1');
+      const saved = localStorage.getItem('smarthome_devices_v3');
       if (saved) {
         const parsed = JSON.parse(saved);
         // Merge with initial to ensure schema updates
@@ -238,7 +238,7 @@ class DeviceStore {
 
   saveDevices() {
     try {
-      localStorage.setItem('smarthome_devices_v1', JSON.stringify(this.devices));
+      localStorage.setItem('smarthome_devices_v3', JSON.stringify(this.devices));
     } catch (e) {
       console.warn('Failed to save devices', e);
     }

@@ -4,8 +4,8 @@ class ESP32Bridge {
     this.mode = localStorage.getItem('smarthome_esp32_mode') || 'websocket'; // 'simulated' | 'websocket' | 'http_rest'
     this.ip = localStorage.getItem('smarthome_esp32_ip') || (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.hostname : 'smarthome.manajemensystem.my.id');
     this.wsPort = localStorage.getItem('smarthome_esp32_ws_port') || (window.location.port || '80');
-    this.httpPort = localStorage.getItem('smarthome_esp32_http_port') || (window.location.port || '80');
     this.connected = false;
+    this.hwConnected = false;
     this.ws = null;
     this.logs = [];
     this.listeners = [];
@@ -96,10 +96,10 @@ class ESP32Bridge {
 
       this.ws.onopen = () => {
         this.connected = true;
-        this.log('WS', `Terhubung ke ESP32 pada ${wsUrl}!`);
-        this.notifyStatus(true);
-        // Request initial state
+        this.log('WS', `Terhubung ke server broker ${wsUrl}`);
+        // Request initial state and hardware status from broker
         this.sendWS({ action: 'getState' });
+        this.notifyStatus(this.hwConnected);
       };
 
       this.ws.onmessage = (evt) => {
@@ -118,6 +118,7 @@ class ESP32Bridge {
 
       this.ws.onclose = () => {
         this.connected = false;
+        this.hwConnected = false;
         this.notifyStatus(false);
         this.log('WS', 'Koneksi WebSocket terputus. Mencoba reconnect dalam 5 detik...');
         if (this.mode === 'websocket') {
@@ -206,6 +207,21 @@ class ESP32Bridge {
   }
 
   handleIncoming(data) {
+    // 1. ESP32 Physical Hardware Status from VPS Broker
+    if (data.type === 'esp_status' || typeof data.espConnected === 'boolean') {
+      const isOnline = data.type === 'esp_status' ? (data.connected === true || data.espConnected === true) : Boolean(data.espConnected);
+      this.hwConnected = isOnline;
+      this.notifyStatus(this.hwConnected);
+      if (data.msg) {
+        this.log('SYS', data.msg);
+      }
+    } else if (data.from === 'esp32' || data.telemetry) {
+      if (!this.hwConnected) {
+        this.hwConnected = true;
+        this.notifyStatus(true);
+      }
+    }
+
     if (data.telemetry) {
       this.telemetry = { ...this.telemetry, ...data.telemetry };
       this.notifyTelemetry();
@@ -241,8 +257,8 @@ class ESP32Bridge {
     };
   }
 
-  notifyStatus(status) {
-    this.listeners.forEach(l => l.onStatus && l.onStatus(status, this.mode));
+  notifyStatus(status = this.hwConnected) {
+    this.listeners.forEach(l => l.onStatus && l.onStatus(this.hwConnected, this.mode, this.connected));
   }
 
   notifyTelemetry() {
