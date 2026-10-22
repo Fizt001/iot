@@ -37,7 +37,7 @@ const char* password = "PASSWORD_HOTSPOT";
 
 // Alamat Domain VPS Anda (Privat & Bersih tanpa IP)
 const char* vps_host = "smarthome.manajemensystem.my.id"; // Domain VPS Anda
-const int   vps_port = 80;                                // Port standar Web/WebSocket (Port 80)
+const int   vps_port = 8005;                              // Port khusus komunikasi ESP32 hardware (Port 8005)
 
 // =========================================================================
 // 2. DEFINISI PIN & RELAY

@@ -256,7 +256,7 @@ class ESP32Bridge {
   // Generates complete Arduino IDE / PlatformIO C++ firmware code
   generateFirmwareCode(ssid = 'WIFI_HOTSPOT_HP', pass = 'PASSWORD_HOTSPOT') {
     const vpsHost = (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.hostname : 'smarthome.manajemensystem.my.id';
-    const vpsPort = window.location.port || '80';
+    const vpsPort = 8005;
     return `/*
  * =========================================================================
  * SMART HOME ESP32 - CONTROLLER FIRMWARE (CLOUD VPS & HOTSPOT HP)
