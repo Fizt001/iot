@@ -1,0 +1,516 @@
+/* =========================================================================
+   FLOOR PLAN SVG & ARCHITECTURAL STYLING
+   ========================================================================= */
+
+.floorplan-wrapper {
+  position: relative;
+  width: 100%;
+  background: radial-gradient(circle at 50% 50%, #0d1527 0%, #080c16 100%);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  user-select: none;
+}
+
+.floorplan-controls {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  padding: 6px 12px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.fp-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fp-btn:hover {
+  background: rgba(6, 182, 212, 0.2);
+  color: #38bdf8;
+  border-color: rgba(6, 182, 212, 0.4);
+  transform: translateY(-1px);
+}
+
+.fp-btn:active {
+  transform: translateY(1px);
+}
+
+.fp-zoom-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  min-width: 42px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.floorplan-legend {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  padding: 8px 14px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot.light-on {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.legend-dot.light-off {
+  background: #475569;
+}
+
+.legend-dot.fan-on {
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+}
+
+.floorplan-viewport {
+  width: 100%;
+  aspect-ratio: 1000 / 820;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  touch-action: pan-x pan-y;
+  cursor: grab;
+}
+
+.floorplan-svg {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  transform-origin: center center;
+  transition: transform 0.15s ease-out;
+}
+
+/* ================= SVG ARCHITECTURAL ELEMENTS ================= */
+
+.foundation-base {
+  fill: #090e1a;
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-width: 2;
+}
+
+.area-backyard {
+  fill: rgba(15, 23, 42, 0.4);
+  stroke: rgba(255, 255, 255, 0.05);
+  stroke-width: 1;
+}
+
+.area-frontyard {
+  stroke: rgba(16, 185, 129, 0.2);
+  stroke-width: 1;
+}
+
+.area-label {
+  fill: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* Room Rectangles */
+.room-rect {
+  transition: fill 0.3s ease, stroke 0.3s ease;
+  cursor: pointer;
+}
+
+.room-type-bedroom {
+  fill: #10172a;
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 1;
+}
+
+.room-type-living, .room-type-family {
+  fill: #131c31;
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 1;
+}
+
+.room-type-kitchen {
+  fill: #111a2d;
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 1;
+}
+
+.room-type-bathroom {
+  fill: #0c1c2e;
+  stroke: rgba(56, 189, 248, 0.15);
+  stroke-width: 1;
+}
+
+.room-type-porch {
+  fill: #0e1626;
+  stroke: rgba(255, 255, 255, 0.06);
+}
+
+.room-rect:hover {
+  fill-opacity: 0.85;
+  filter: brightness(1.2);
+}
+
+.room-rect.is-selected {
+  stroke: #38bdf8 !important;
+  stroke-width: 2 !important;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.35));
+}
+
+/* Walls */
+.wall-external {
+  fill: none;
+  stroke: #475569;
+  stroke-width: 8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+.wall-internal {
+  stroke: #334155;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.wall-archway {
+  stroke: #06b6d4;
+  stroke-width: 2;
+  opacity: 0.4;
+}
+
+.door-swing {
+  fill: none;
+  stroke: rgba(56, 189, 248, 0.4);
+  stroke-width: 1.5;
+  stroke-dasharray: 3, 3;
+}
+
+.door-leaf {
+  stroke: #38bdf8;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.window-glass {
+  stroke: #06b6d4;
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 4px #06b6d4);
+}
+
+/* Furniture */
+.furniture-wood {
+  fill: #1e293b;
+  stroke: #334155;
+  stroke-width: 1;
+}
+
+.furniture-detail {
+  fill: #1e293b;
+  stroke: #334155;
+  stroke-width: 1;
+}
+
+.furniture-text {
+  fill: #64748b;
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* Room Labels */
+.room-badge-bg {
+  fill: rgba(15, 23, 42, 0.85);
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+}
+
+.room-label-text {
+  fill: #94a3b8;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+/* ================= LIGHTING GLOW ================= */
+
+.light-glow-fx {
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* ================= DEVICE NODES (INTERACTIVE PINS) ================= */
+
+.device-node {
+  cursor: pointer;
+  /* Crucial: DO NOT apply CSS transform here!
+     The root <g> is positioned via SVG transform="translate(x, y)".
+     Overriding transform in CSS replaces coordinate translation and causes
+     violent 60 FPS vibration / jumping across the screen! */
+}
+
+.hit-area {
+  cursor: pointer;
+}
+
+.node-bg {
+  fill: #1e293b;
+  stroke: #475569;
+  stroke-width: 2;
+  transition: stroke 0.2s ease, stroke-width 0.2s ease, fill 0.2s ease, filter 0.2s ease;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+/* Stable, flicker-free hover highlighting */
+.device-node:hover .node-bg {
+  stroke-width: 3.5;
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.7));
+}
+
+.device-node.node-light:hover .node-bg {
+  stroke: #fbbf24;
+  filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.85));
+}
+
+.device-node.node-fan:hover .node-bg {
+  stroke: #38bdf8;
+  filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.85));
+}
+
+/* Node Label Tag */
+.node-label-bg {
+  fill: rgba(15, 23, 42, 0.9);
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 0.8;
+  transition: all 0.2s ease;
+}
+
+.node-label-text {
+  fill: #cbd5e1;
+  font-size: 7.5px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+  transition: fill 0.2s ease;
+}
+
+.device-node:hover .node-label-bg {
+  fill: rgba(15, 23, 42, 0.98);
+  stroke: #38bdf8;
+  stroke-width: 1.2;
+}
+
+.device-node.node-light:hover .node-label-bg {
+  stroke: #fbbf24;
+}
+
+.device-node:hover .node-label-text {
+  fill: #ffffff;
+}
+
+/* LIGHT NODE STATES */
+.node-light .bulb-body {
+  color: #64748b;
+  transition: color 0.3s ease;
+  pointer-events: none;
+}
+
+.node-light .light-pulse-aura {
+  fill: #f59e0b;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.node-light.is-active .node-bg {
+  fill: #451a03;
+  stroke: #f59e0b;
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.8));
+}
+
+.node-light.is-active .bulb-body {
+  color: #fbbf24;
+  filter: drop-shadow(0 0 6px #fbbf24);
+}
+
+.node-light.is-active .light-pulse-aura {
+  opacity: 0.25;
+}
+
+/* FAN NODE STATES */
+.node-fan .fan-blade {
+  fill: #64748b;
+  transition: fill 0.3s ease;
+  pointer-events: none;
+}
+
+.node-fan .fan-wind-aura {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.speed-badge-bg {
+  fill: #334155;
+  transition: fill 0.3s ease;
+  pointer-events: none;
+}
+
+.speed-badge-text {
+  fill: #94a3b8;
+  font-size: 7px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.node-fan.is-active .node-bg {
+  fill: #082f49;
+  stroke: #38bdf8;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.7));
+}
+
+.node-fan.is-active .fan-blade {
+  fill: #38bdf8;
+}
+
+.node-fan.is-active .speed-badge-bg {
+  fill: #0284c7;
+}
+
+.node-fan.is-active .speed-badge-text {
+  fill: #ffffff;
+}
+
+/* Fan Wind Vortex Aura - animates stroke dash in place without any coordinate offset */
+.node-fan.is-active .fan-wind-aura {
+  opacity: 0.75;
+  animation: fanPulseDash 1.2s linear infinite;
+}
+
+@keyframes fanPulseDash {
+  0% {
+    stroke-dashoffset: 0;
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.85;
+  }
+  100% {
+    stroke-dashoffset: 24;
+    opacity: 0.4;
+  }
+}
+
+/* Fan Rotor Rotation - spins cleanly around its own center (0, 0) via fill-box */
+.fan-rotor {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+
+@keyframes fanSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile responsive adjustments for floor plan */
+@media (max-width: 640px) {
+  .floorplan-wrapper {
+    border-radius: 14px;
+  }
+  .floorplan-legend {
+    display: none; /* Keep clean on small mobile */
+  }
+  .floorplan-controls {
+    top: 6px;
+    right: 6px;
+    padding: 3px 6px;
+    gap: 4px;
+    border-radius: 20px;
+  }
+  .fp-btn {
+    width: 24px;
+    height: 24px;
+  }
+  .fp-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+  .fp-zoom-label {
+    font-size: 0.65rem;
+    min-width: 32px;
+  }
+  .floorplan-viewport {
+    aspect-ratio: 1000 / 820;
+    min-height: auto;
+    max-height: 55vh;
+    padding: 4px;
+  }
+  .room-label-text {
+    font-size: 7.5px;
+  }
+  .furniture-text {
+    font-size: 6.5px;
+  }
+  .area-label {
+    font-size: 8.5px;
+  }
+}

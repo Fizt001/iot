@@ -1,0 +1,23 @@
+{
+  "name": "smarthome-esp32",
+  "version": "1.0.0",
+  "description": "Smart Home ESP32 IoT Dashboard with Interactive 2D Architectural Floor Plan and WebSocket Relay",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "esp32",
+    "iot",
+    "smart-home",
+    "websocket",
+    "floorplan",
+    "pwa"
+  ],
+  "author": "Fizt001",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
