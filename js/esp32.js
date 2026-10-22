@@ -2,9 +2,9 @@
 class ESP32Bridge {
   constructor() {
     this.mode = localStorage.getItem('smarthome_esp32_mode') || 'websocket'; // 'simulated' | 'websocket' | 'http_rest'
-    this.ip = localStorage.getItem('smarthome_esp32_ip') || (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.hostname : '103.247.9.206');
-    this.wsPort = localStorage.getItem('smarthome_esp32_ws_port') || (window.location.port || '8005');
-    this.httpPort = localStorage.getItem('smarthome_esp32_http_port') || (window.location.port || '8005');
+    this.ip = localStorage.getItem('smarthome_esp32_ip') || (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.hostname : 'smarthome.manajemensystem.my.id');
+    this.wsPort = localStorage.getItem('smarthome_esp32_ws_port') || (window.location.port || '80');
+    this.httpPort = localStorage.getItem('smarthome_esp32_http_port') || (window.location.port || '80');
     this.connected = false;
     this.ws = null;
     this.logs = [];
@@ -255,8 +255,8 @@ class ESP32Bridge {
 
   // Generates complete Arduino IDE / PlatformIO C++ firmware code
   generateFirmwareCode(ssid = 'WIFI_HOTSPOT_HP', pass = 'PASSWORD_HOTSPOT') {
-    const vpsHost = (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.hostname : '103.247.9.206';
-    const vpsPort = window.location.port || '8005';
+    const vpsHost = (window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') ? window.location.hostname : 'smarthome.manajemensystem.my.id';
+    const vpsPort = window.location.port || '80';
     return `/*
  * =========================================================================
  * SMART HOME ESP32 - CONTROLLER FIRMWARE (CLOUD VPS & HOTSPOT HP)

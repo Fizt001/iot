@@ -70,11 +70,11 @@ Dashboard Smart Home modern berbasis Web PWA dengan visualisasi **Denah Rumah 2D
 3. Jalankan server dengan PM2 (agar jalan terus di background):
    ```bash
    npm install -g pm2
-   pm2 start server.js --name "smarthome-esp32"
+   pm2 start server.js --name "smarthome_iot"
    pm2 save
    pm2 startup
    ```
-4. Buka di browser: `http://IP_VPS_ANDA:8080`
+4. Buka di browser: `http://smarthome.manajemensystem.my.id`
 
 ### Opsi 2: Menggunakan Docker
 
