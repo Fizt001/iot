@@ -27,13 +27,15 @@
 #include <WiFi.h>
 #include <WebSocketsClient.h> // Menghubungkan ESP32 ke VPS Cloud via Internet
 #include <ArduinoJson.h>
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
 
 // =========================================================================
 // 1. KONFIGURASI WIFI & VPS CLOUD
 // =========================================================================
 // Ganti dengan Nama & Password Hotspot HP / WiFi Anda
-const char* ssid     = "HOTSPOT_HP_ANDA";
-const char* password = "PASSWORD_HOTSPOT";
+const char* ssid     = "Sumsang";
+const char* password = "123456789";
 
 // Alamat Domain VPS Anda (Privat & Bersih tanpa IP)
 const char* vps_host = "smarthome.manajemensystem.my.id"; // Domain VPS Anda
@@ -243,6 +245,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 // 5. MAIN SETUP & LOOP
 // =========================================================================
 void setup() {
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // Disable Brownout detector
   Serial.begin(115200);
   setupPins();
 
@@ -253,6 +256,7 @@ void setup() {
   Serial.println(ssid);
 
   WiFi.mode(WIFI_STA);
+  WiFi.setTxPower(WIFI_POWER_15dBm);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(400);

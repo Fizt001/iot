@@ -229,3 +229,4 @@ void loop() {
    - Pastikan ESP32 mengirim pesan JSON telemetri / greeting pertama kali.
 3. **Relay Terbalik (Nyala saat di web Mati):**
    - Cukup ubah definisi konstanta `#define RELAY_ON LOW` dan `#define RELAY_OFF HIGH`.
+

@@ -25,6 +25,10 @@
 #include <WebSocketsClient.h>
 #include <ArduinoJson.h>
 
+// Header untuk mengatasi error 'Brownout detector was triggered'
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
+
 // 1. KONFIGURASI WIFI & SERVER
 const char* ssid     = "Sumsang";                           // Ganti nama WiFi / Hotspot
 const char* password = "123456789";                         // Ganti password WiFi
@@ -170,6 +174,9 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
 
 // 7. SETUP UTAMA
 void setup() {
+  // Matikan Brownout Detector agar ESP32 tidak auto-reset saat WiFi menyala
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+
   Serial.begin(115200);
   inisialisasiPin();
 
@@ -179,6 +186,7 @@ void setup() {
   Serial.printf("Menghubungkan ke WiFi: %s\n", ssid);
 
   WiFi.mode(WIFI_STA);
+  WiFi.setTxPower(WIFI_POWER_15dBm); // Mengurangi spike arus RF agar aman dengan kabel USB
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(400);
