@@ -31,9 +31,17 @@ const char* password = "123456789";                         // Ganti password Wi
 const char* vps_host = "smarthome.manajemensystem.my.id";   // Domain Cloud VPS
 const int   vps_port = 8005;                                // Port khusus hardware ESP32
 
-// Logika Relay: Kebanyakan modul relay menyala saat pin LOW (Active LOW)
-#define RELAY_ON  LOW
-#define RELAY_OFF HIGH
+// =========================================================================
+// PILIH MODE OUTPUT: LED BIASA (PROTOTIPE) vs MODUL RELAY ASLI
+// =========================================================================
+// 1. JIKA PAKAI LED BIASA (Kaki + ke GPIO, Kaki - ke GND):
+#define RELAY_ON  HIGH  // Beri tegangan HIGH (3.3V) agar LED Nyala
+#define RELAY_OFF LOW   // Beri tegangan LOW (0V) agar LED Mati
+
+// 2. NANTI JIKA SUDAH PAKAI MODUL RELAY ASLI (ACTIVE LOW), CUKUP GANTI JADI INI:
+// #define RELAY_ON  LOW   // Modul Relay: LOW = Aktif / Nyala
+// #define RELAY_OFF HIGH  // Modul Relay: HIGH = Mati
+// =========================================================================
 
 // 2. DEFINISI PIN GPIO
 #define PIN_LOBBY_LIGHT     16
@@ -212,3 +220,4 @@ void loop() {
     }
   }
 }
+
